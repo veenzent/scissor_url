@@ -2,10 +2,12 @@ import secrets, string
 from urllib.parse import urlparse
 from urllib.request import urlopen
 from typing import Annotated
-from fastapi import HTTPException, Request, Depends
+from fastapi import HTTPException, Request, status, Depends
+from sqlalchemy.orm import Session
 from io import BytesIO
 import segno
-from sqlalchemy.orm import Session
+from functools import wraps
+import time
 from .database import get_db
 from . import schemas, models
 
@@ -25,16 +27,14 @@ def get_shortened_url_by_secret_key(secret_key: str, db: Session) -> models.URL:
         .first():
         return shortened_url
 
-
-def create_new_url(db: Session, url: schemas.User_URL) -> models.URL:
+def create_new_url(db: Session, url: str) -> models.URL:
     key = create_random_unique_key(db)
     secret_key = f"{key}_{create_random_key(8)}"
-    new_url = models.URL(target_url=url.target_url, key=key, secret_key=secret_key)
+    new_url = models.URL(target_url=url, key=key, secret_key=secret_key)
     db.add(new_url)
     db.commit()
     db.refresh(new_url)
     return new_url
-
 
 
 # - - - - - - - - OTHER INTERACTIONS - - - - - - - -
@@ -73,9 +73,23 @@ def update_db_clicks(url: schemas.URL, db: db) -> models.URL:
     db.refresh(url)
     return url
 
-def deactivate_url_by_secret_key(secret_key: str, db: db) -> models.URL:
-    if url := get_shortened_url_by_secret_key(secret_key, db):
+def deactivate_url_by_url_key(url_key: str, db: db) -> models.URL:
+    if url := get_shortened_url_by_key(url_key, db):
         url.is_active = False
+        db.commit()
+        db.refresh(url)
+        return url
+
+def activate_url_by_url_key(url_key: str, db: db) -> models.URL:
+    if url := db.query(models.URL).filter(models.URL.key == url_key).first():
+        url.is_active = True
+        db.commit()
+        db.refresh(url)
+        return url
+
+def delete_url_by_secret_key(secret_key: str, db: db) -> models.URL:
+    if url := db.query(models.URL).filter(models.URL.secret_key == secret_key).first():
+        db.delete(url)
         db.commit()
         db.refresh(url)
         return url
@@ -108,3 +122,21 @@ def generate_qr_code(data: str):
 
     image_buffer.seek(0)
     return image_buffer
+
+# rate limiter
+def rate_limiter(max_requests: int, time_frame: int):
+    def decorator(func):
+        calls = []
+
+        @wraps(func)
+        async def wrapper(url: str, request: Request, *args, **kwargs):
+            now = time.time()
+            requests_in_timeframe = [r for r in calls if r > now - time_frame]
+
+            if len(requests_in_timeframe) >= max_requests:
+                raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded!")
+
+            calls.append(now)
+            return func(url, request, *args, **kwargs)
+        return wrapper
+    return decorator
