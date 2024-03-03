@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse, StreamingResponse
 from starlette.datastructures import URL
 from cachetools import TTLCache, cached
 from datetime import timedelta
-from scissorapp import schemas, models, dependencies
+from .. import schemas, models, dependencies
 from ..instance.config import get_settings
 from ..rate_limiter import rate_limiter
 
@@ -29,8 +29,7 @@ def get_admin_info(url: models.URL) -> schemas.URL_Info:
 # - - - - - - - - - - - SHORTEN URL - - - - - - - - - - -
 # paste long urls to shorten
 @url_shortener.post("/shorten-url", response_model=schemas.URL_Info)
-@rate_limiter(limit=10, interval=timedelta(seconds=60))
-async def shorten_url(url: schemas.User_URL, request: Request, db: dependencies.db):
+async def shorten_url(url: schemas.User_URL, db: dependencies.db):
     # validate url
     if not dependencies.validate_url(url.target_url):
         dependencies.raise_bad_request("Your provided URL is invalid, please insert a valid URL.")
@@ -42,7 +41,6 @@ async def shorten_url(url: schemas.User_URL, request: Request, db: dependencies.
 # - - - - - - - - - - - CUSTOMIZE URL ADDRESS - - - - - - - - - - -
 # customize address of shortened url
 @url_shortener.put("/{url_key}", response_model=schemas.URL_Info)
-@rate_limiter(limit=10, interval=timedelta(seconds=60))
 async def customize_short_url_address(
     url: str,
     new_address: str,
@@ -54,15 +52,12 @@ async def customize_short_url_address(
     dependencies.raise_not_found(request)
 
 
-# - - - - - - - - - - - SHARE URL - - - - - - - - - - -
-# share shortened url on socail media
-
-
 # - - - - - - - - - - - GENERATE QR CODE - - - - - - - - - - -
 # generate qr code
 @url_shortener.get("/{url_key}/qrcode")
 @rate_limiter(limit=10, interval=timedelta(seconds=60))
-async def generate_qr_code(url_key: str):
+@cached(cache)
+async def generate_qr_code(request: Request, url_key: str):
     base_url = URL(get_settings().base_url)
     shortened_url = str(base_url.replace(path=url_key))
 
@@ -76,10 +71,11 @@ async def generate_qr_code(url_key: str):
 # - - - - - - - - - - - REDIRECT URL - - - - - - - - - - -
 # redirect shortened url to target url
 @url_shortener.get("/{url_key}")
+@rate_limiter(limit=10, interval=timedelta(seconds=60))
 @cached(cache)
 async def forward_to_target_url(
-    url_key: str,
     request: Request,
+    url_key: str,
     db: dependencies.db
 ):
     if short_url := dependencies.get_shortened_url_by_key(url_key, db):

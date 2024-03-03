@@ -13,3 +13,8 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+# - - - - - - - - - - FOR TEST - - - - - - - - - -
+test_engine = create_engine(get_settings().test_database_url)
+TestingSessionLocal = sessionmaker(bind=test_engine, autocommit=False, autoflush=False)

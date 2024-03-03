@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     env_name: str = "local"
     base_url: str = "http://localhost:8000"
     database_url: str = "postgresql://username:password@localhost/scissor_url_db"
+    test_database_url: str = "postgresql://username:password@localhost/scissor_url_db"
 
     model_config = SettingsConfigDict(env_file=".env")
 

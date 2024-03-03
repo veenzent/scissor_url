@@ -17,14 +17,12 @@ db = Annotated[Session, Depends(get_db)]
 
 def get_shortened_url_by_key(url_key: str, db: Session) -> models.URL:
     if shortened_url := db.query(models.URL)\
-        .filter(models.URL.key == url_key, models.URL.is_active)\
-        .first():
+        .filter(models.URL.key == url_key, models.URL.is_active).first():
         return shortened_url
 
 def get_shortened_url_by_secret_key(secret_key: str, db: Session) -> models.URL:
     if shortened_url := db.query(models.URL)\
-        .filter(models.URL.secret_key == secret_key, models.URL.is_active)\
-        .first():
+        .filter(models.URL.secret_key == secret_key, models.URL.is_active).first():
         return shortened_url
 
 def create_new_url(db: Session, url: str) -> models.URL:
@@ -122,21 +120,3 @@ def generate_qr_code(data: str):
 
     image_buffer.seek(0)
     return image_buffer
-
-# rate limiter
-def rate_limiter(max_requests: int, time_frame: int):
-    def decorator(func):
-        calls = []
-
-        @wraps(func)
-        async def wrapper(url: str, request: Request, *args, **kwargs):
-            now = time.time()
-            requests_in_timeframe = [r for r in calls if r > now - time_frame]
-
-            if len(requests_in_timeframe) >= max_requests:
-                raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded!")
-
-            calls.append(now)
-            return func(url, request, *args, **kwargs)
-        return wrapper
-    return decorator

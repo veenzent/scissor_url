@@ -15,4 +15,4 @@ print("Existing tables:", existing_tables)
 
 @app.get("/")
 def home():
-    return "Welcome to Scissor URL :)"
+    return {"msg": "Welcome to Scissor URL :)"}
