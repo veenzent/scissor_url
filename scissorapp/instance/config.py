@@ -15,7 +15,7 @@ def get_settings() -> Settings:
     settings = Settings()
     print(f"Loading settings for: {settings.env_name}")
     print(f"BASE_URL: ", settings.base_url)
-    print(f"DATABASE_URL: {settings.database_url}")
+    # print(f"DATABASE_URL: {settings.database_url}")
     return settings
 
 # print("ENV_NAME: ", get_settings().env_name)

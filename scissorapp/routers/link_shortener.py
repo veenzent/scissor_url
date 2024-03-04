@@ -57,15 +57,17 @@ async def customize_short_url_address(
 @url_shortener.get("/{url_key}/qrcode")
 @rate_limiter(limit=10, interval=timedelta(seconds=60))
 @cached(cache)
-async def generate_qr_code(request: Request, url_key: str):
-    base_url = URL(get_settings().base_url)
-    shortened_url = str(base_url.replace(path=url_key))
+async def generate_qr_code(request: Request, url_key: str, db: dependencies.db):
+    if url_in_db := dependencies.get_shortened_url_by_key(url_key, db):
+        base_url = URL(get_settings().base_url)
+        shortened_url = str(base_url.replace(path=url_key))
 
-    qrcode = dependencies.generate_qr_code(shortened_url)
+        qrcode = dependencies.generate_qr_code(shortened_url)
 
-    response = StreamingResponse(content=qrcode, media_type="image/png")
-    response.headers["Content-Disposition"] = f"attachment; filename=qr_code_{url_key}.png"
-    return response
+        response = StreamingResponse(content=qrcode, media_type="image/png")
+        response.headers["Content-Disposition"] = f"attachment; filename=qr_code_{url_key}.png"
+        return response
+    dependencies.raise_bad_request("URL not found.")
 
 
 # - - - - - - - - - - - REDIRECT URL - - - - - - - - - - -
