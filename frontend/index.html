@@ -14,7 +14,7 @@
         <img src="assets/images/Hero-section/Logo.png" alt="Scissor logo" class="logo">
         <nav>
             <ul class="flex nav-tabs">
-                <li class="myurls"><a href="#">Trim URLs</a></li>
+                <li class="myurls"><a href="#trim-url">Trim URLs</a></li>
                 <li>
                     <a href="#" class="features">Features
                         <img src="./assets/images/Hero-section/Chevron-down.png" alt="chevron-down icon" class="chevron">
@@ -250,7 +250,7 @@
                 <img src="./assets/images/Page4/Group 3.png" alt="vector">
                 <img src="./assets/images/Page4/Group 2.png" alt="vector">
             </div>
-            <div class="flex shorten-url">
+            <div class="flex shorten-url" id="trim-url">
                 <div class="flex url-prompt">
                     <input type="text" placeholder="Paste URL here..." class="paste" id="shorten-url">
                 </div>
@@ -261,15 +261,15 @@
                     </button>
                     <!-- <p>By clicking TrimURL, I agree to the <b>Terms of Service, Privacy Policy</b> and Use of Cookies.</p> -->
                 </div>
-                <div class="url-prompt">
+                <div class="url-prompt" id="result">
                     <p>Your Short URL:</p>
                     <div class="flex">
-                        <p>
-                            http://127.0.0.1:8000/
+                        <p id="domain">
+                            <!-- http://127.0.0.1:8000/ -->
                             <!-- Choose Domain -->
                             <!-- <img src="./assets/images/Page4/vector.png" alt="arrow-down icon"> -->
                         </p>
-                        <a class="trimmed-url" href="http://127.0.0.1:8000">KJHd8</a>
+                        <a id="trimmed-url" href="#"></a>
                     </div>
                 </div>
             </div>
@@ -469,5 +469,6 @@
             </div>
         </section>
     </main>
+    <script src="./scissor.js"></script>
 </body>
 </html>

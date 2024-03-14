@@ -86,6 +86,20 @@ async def forward_to_target_url(
     dependencies.raise_not_found(request)
 
 
+# - - - - - - - - - - - ANALYTICS - - - - - - - - - - -
+# get short url analytics
+@url_shortener.get("/{url_key}/analytics", response_model=schemas.URL)
+@rate_limiter(limit=10, interval=timedelta(seconds=60))
+@cached(cache)
+async def get_analytics(request: Request, url_key: str, db: dependencies.db):
+    if short_url := dependencies.get_url_analysis(url_key, db):
+        return schemas.URL(
+            target_url=short_url.target_url,
+            is_active=short_url.is_active,
+            clicks=short_url.clicks
+        )
+
+
 # - - - - - - - - - - - ADMINISTRATION - - - - - - - - - - -
 # get information about shortened url
 @url_shortener.get(

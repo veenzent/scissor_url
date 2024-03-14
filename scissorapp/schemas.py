@@ -14,3 +14,4 @@ class URL(User_URL):
 class URL_Info(URL):
     shortened_url: str
     admin_url: str
+

@@ -109,7 +109,6 @@ def generate_qr_code(data: str):
 
     qrcode = segno.make_qr(data)
     qrcode.save(
-        # out=f"{url_key}.png",
         image_buffer,
         kind="png",
         scale=5,
@@ -120,3 +119,7 @@ def generate_qr_code(data: str):
 
     image_buffer.seek(0)
     return image_buffer
+
+def get_url_analysis(url: str, db:db):
+    if url := get_shortened_url_by_key(url, db):
+        return url
