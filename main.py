@@ -8,7 +8,7 @@ from scissorapp.database import Base, engine
 app = FastAPI()
 
 origins = [
-    "http://127.0.0.1:5500"
+    "http://127.0.0.1:5500",
     "https://v-scissor.netlify.app/"
 ]
 
