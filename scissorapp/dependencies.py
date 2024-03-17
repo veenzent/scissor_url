@@ -51,7 +51,7 @@ def raise_bad_request(message: str):
     raise HTTPException(status_code=400, detail=message)
 
 def raise_not_found(request: Request):
-    message = f"URL '{request.url}' doesn't exist"
+    message = f"Entered URL '{request.url}' not found."
     raise HTTPException(status_code=404, detail=message)
 
 def validate_url(url):
