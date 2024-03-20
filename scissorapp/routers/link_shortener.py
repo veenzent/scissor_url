@@ -98,7 +98,7 @@ async def get_analytics(request: Request, url_key: str, db: dependencies.db):
             is_active=short_url.is_active,
             clicks=short_url.clicks
         )
-    raise dependencies.raise_not_found(request)
+    dependencies.raise_not_found(request)
 
 
 # - - - - - - - - - - - ADMINISTRATION - - - - - - - - - - -
