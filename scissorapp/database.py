@@ -17,4 +17,4 @@ def get_db():
 
 # - - - - - - - - - - FOR TEST - - - - - - - - - -
 test_engine = create_engine(get_settings().test_database_url)
-TestingSessionLocal = sessionmaker(bind=test_engine, autocommit=False, autoflush=False)
+Test_SessionLocal = sessionmaker(bind=test_engine, autocommit=False, autoflush=False)
