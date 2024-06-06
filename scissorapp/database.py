@@ -18,3 +18,10 @@ def get_db():
 # - - - - - - - - - - FOR TEST - - - - - - - - - -
 test_engine = create_engine(get_settings().test_database_url)
 Test_SessionLocal = sessionmaker(bind=test_engine, autocommit=False, autoflush=False)
+
+def override_get_db():
+    try:
+        db = Test_SessionLocal()
+        yield db
+    finally:
+        db.close()
