@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from scissorapp.routers.link_shortener import url_shortener
-from scissorapp import models
-from scissorapp.database import Base, engine
+from .scissorapp.routers.link_shortener import url_shortener
+from .scissorapp import models
+from .scissorapp.database import Base, engine
 
 
 app = FastAPI()
