@@ -13,7 +13,7 @@ from . import schemas, models
 
 
 # - - - - - - - - DATABASE INTERACTIONS - - - - - - - -
-db = Annotated[Session, Depends(get_db)]
+db = get_db()
 
 def get_shortened_url_by_key(url_key: str, db: Session) -> models.URL:
     if shortened_url := db.query(models.URL)\
@@ -25,7 +25,7 @@ def get_shortened_url_by_secret_key(secret_key: str, db: Session) -> models.URL:
         .filter(models.URL.secret_key == secret_key, models.URL.is_active).first():
         return shortened_url
 
-def create_new_url(db: Session, url: str) -> models.URL:
+def create_new_url(db: db, url: str) -> models.URL:
     key = create_random_unique_key(db)
     secret_key = f"{key}_{create_random_key(8)}"
     new_url = models.URL(target_url=url, key=key, secret_key=secret_key)

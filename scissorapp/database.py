@@ -1,20 +1,21 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-from .instance.config import get_settings
+# - - - - - - - - - - FIREBASE REALTIME DB - - - - - - - -
 
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import db
 
-engine = create_engine(get_settings().database_url)
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
-Base = declarative_base()
+# Fetch the service account key JSON file contents
+cred = credentials.Certificate('../scissorurl-182fe-firebase-adminsdk-jlvfk-a6e66e1308.json')
+
+# Initialize the app with a service account, granting admin privileges
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://databaseName.firebaseio.com'
+})
+
+# As an admin, the app has access to read and write all data, regradless of Security Rules
+ref = db.reference('restricted_access/secret_document')
+print(ref.get())
 
 def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-# - - - - - - - - - - FOR TEST - - - - - - - - - -
-test_engine = create_engine(get_settings().test_database_url)
-TestingSessionLocal = sessionmaker(bind=test_engine, autocommit=False, autoflush=False)
+    db = ref
+    yield db
