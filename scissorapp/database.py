@@ -1,27 +1,7 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
 from .instance.config import get_settings
+from supabase import create_client, Client
 
+supabase_url: str = get_settings().supabase_url
+supabase_key: str = get_settings().supabase_key
 
-engine = create_engine(get_settings().database_url)
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
-Base = declarative_base()
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-# - - - - - - - - - - FOR TEST - - - - - - - - - -
-test_engine = create_engine(get_settings().test_database_url)
-Test_SessionLocal = sessionmaker(bind=test_engine, autocommit=False, autoflush=False)
-
-def override_get_db():
-    try:
-        db = Test_SessionLocal()
-        yield db
-    finally:
-        db.close()
+supabase: Client = create_client(supabase_url, supabase_key)

@@ -8,21 +8,24 @@ from io import BytesIO
 import segno
 from functools import wraps
 import time
-from .database import get_db
+from .database import supabase
 from . import schemas, models
 
 
 # - - - - - - - - DATABASE INTERACTIONS - - - - - - - -
-db = Annotated[Session, Depends(get_db)]
-
-def get_shortened_url_by_key(url_key: str, db: Session) -> models.URL:
-    if shortened_url := db.query(models.URL)\
-        .filter(models.URL.key == url_key, models.URL.is_active).first():
+def get_shortened_url_by_key(url_key: str) -> models.URL:
+    shortened_url = supabase.table(models.URL)\
+        .select(models.URL.key).eq("key", url_key).execute()
+    
+    url_active = supabase.table(models.URL)\
+        .select(models.URL.is_active).eq("is_active", True).execute()
+    
+    if url_active and shortened_url:
         return shortened_url
 
 def get_shortened_url_by_secret_key(secret_key: str, db: Session) -> models.URL:
-    if shortened_url := db.query(models.URL)\
-        .filter(models.URL.secret_key == secret_key, models.URL.is_active).first():
+    if shortened_url := supabase.table(models.URL)\
+        .select(models.URL.secret_key).eq("secret_key", secret_key, models.URL.is_active).first():
         return shortened_url
 
 def create_new_url(db: Session, url: str) -> models.URL:
