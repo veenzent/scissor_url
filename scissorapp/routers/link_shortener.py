@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse, StreamingResponse
 from starlette.datastructures import URL
 from cachetools import TTLCache, cached
+from postgrest.base_request_builder import APIResponse
 from datetime import timedelta
 from .. import schemas, models, dependencies
 from ..instance.config import get_settings
@@ -31,6 +32,21 @@ def get_admin_info(url: models.URL) -> schemas.URL_Info:
 @url_shortener.post("/shorten-url", response_model=schemas.URL_Info)
 async def shorten_url(url: schemas.User_URL):
     # validate url
+    """
+    Shortens a given URL and returns administrative information.
+
+    This endpoint receives a URL, validates it, and if valid, creates a shortened version of the URL.
+    It then returns the shortened URL along with administrative details, such as an admin URL.
+
+    Args:
+        url: The original URL to be shortened, encapsulated in a User_URL schema.
+
+    Returns:
+        A URL_Info schema containing the target URL, its shortened version, and admin details.
+
+    Raises:
+        HTTPException: If the provided URL is invalid.
+    """
     if not dependencies.validate_url(url.target_url):
         dependencies.raise_bad_request("Your provided URL is invalid, please insert a valid URL.")
     
@@ -40,16 +56,15 @@ async def shorten_url(url: schemas.User_URL):
 
 # - - - - - - - - - - - CUSTOMIZE URL ADDRESS - - - - - - - - - - -
 # customize address of shortened url
-# @url_shortener.put("/{url_key}", response_model=schemas.URL_Info)
-# async def customize_short_url_address(
-#     url: str,
-#     new_address: str,
-#     request: Request,
-#     db: dependencies.db
-#     ):
-#     if shortened_url := dependencies.customize_short_url_address(url, new_address, db):
-#         return get_admin_info(shortened_url)
-#     dependencies.raise_not_found(request)
+@url_shortener.put("/{url_key}", response_model=schemas.URL_Info)
+async def customize_short_url_address(
+    url: str,
+    new_address: str,
+    request: Request,
+    ):
+    if shortened_url := dependencies.customize_short_url_address(url, new_address):
+        return get_admin_info(shortened_url)
+    dependencies.raise_not_found(request)
 
 
 # # - - - - - - - - - - - GENERATE QR CODE - - - - - - - - - - -
@@ -101,18 +116,18 @@ async def shorten_url(url: schemas.User_URL):
 #     dependencies.raise_not_found(request)
 
 
-# # - - - - - - - - - - - ADMINISTRATION - - - - - - - - - - -
-# # get information about shortened url
-# @url_shortener.get(
-#         "/admin/{secret_key}",
-#         name="administration info",
-#         response_model=schemas.URL_Info
-#     )
-# @cached(cache)
-# async def url_info(secret_key: str, request: Request, db: dependencies.db):
-#     if url := dependencies.get_shortened_url_by_secret_key(secret_key, db):
-#         return get_admin_info(url)
-#     dependencies.raise_not_found(request)
+# - - - - - - - - - - - ADMINISTRATION - - - - - - - - - - -
+# get information about shortened url
+@url_shortener.get(
+        "/admin/{secret_key}",
+        name="administration info",
+        response_model=schemas.URL_Info
+    )
+@cached(cache)
+async def url_info(secret_key: str, request: Request):
+    if url := dependencies.get_shortened_url_by_secret_key(secret_key):
+        return get_admin_info(url)
+    dependencies.raise_not_found(request)
 
 
 # # - - - - - - - - - - - DELETE URL - - - - - - - - - - -
