@@ -62,27 +62,45 @@ async def customize_short_url_address(
     new_address: str,
     request: Request,
     ):
+    """
+    Customizes the address of a shortened URL.
+
+    Given a shortened URL and a new address, this function will update the shortened URL's address in the database.
+
+    Args:
+        url (str): The key of the shortened URL to customize. Either full address: "https://example.com/abc123" or just key: "abc123".
+        new_address (str): The new address to assign to the shortened URL.
+
+    Returns:
+        The shortened URL, with its new address.
+
+    Raises:
+        HTTPException: If the new address already exists in the database.
+    """
     if shortened_url := dependencies.customize_short_url_address(url, new_address):
         return get_admin_info(shortened_url)
     dependencies.raise_not_found(request)
 
 
-# # - - - - - - - - - - - GENERATE QR CODE - - - - - - - - - - -
-# # generate qr code
-# @url_shortener.get("/{url_key}/qrcode")
-# @rate_limiter(limit=10, interval=timedelta(seconds=60))
-# @cached(cache)
-# async def generate_qr_code(request: Request, url_key: str, db: dependencies.db):
-#     if url_in_db := dependencies.get_shortened_url_by_key(url_key, db):
-#         base_url = URL(get_settings().base_url)
-#         shortened_url = str(base_url.replace(path=url_key))
+# - - - - - - - - - - - GENERATE QR CODE - - - - - - - - - - -
+# generate qr code
+@url_shortener.get("/{url_key}/qrcode")
+@rate_limiter(limit=10, interval=timedelta(seconds=60))
+@cached(cache)
+async def generate_qr_code(request: Request, url_key: str):
+    if '/' in url_key:
+        url_key = url_key.split("/")[-1]
 
-#         qrcode = dependencies.generate_qr_code(shortened_url)
+    if url_in_db := dependencies.get_shortened_url_by_key(url_key):
+        base_url = URL(get_settings().base_url)
+        shortened_url = str(base_url.replace(path=url_key))
 
-#         response = StreamingResponse(content=qrcode, media_type="image/png")
-#         response.headers["Content-Disposition"] = f"attachment; filename=qr_code_{url_key}.png"
-#         return response
-#     dependencies.raise_bad_request("URL not found.")
+        qrcode = dependencies.generate_qr_code(shortened_url)
+
+        response = StreamingResponse(content=qrcode, media_type="image/png")
+        response.headers["Content-Disposition"] = f"attachment; filename=qr_code_{url_key}.png"
+        return response
+    dependencies.raise_bad_request("URL not found.")
 
 
 # # - - - - - - - - - - - REDIRECT URL - - - - - - - - - - -
