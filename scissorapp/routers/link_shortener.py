@@ -69,6 +69,7 @@ async def customize_short_url_address(
 
     Args:
         url (str): The key of the shortened URL to customize. Either full address: "https://example.com/abc123" or just key: "abc123".
+
         new_address (str): The new address to assign to the shortened URL.
 
     Returns:
@@ -103,35 +104,34 @@ async def generate_qr_code(request: Request, url_key: str):
     dependencies.raise_bad_request("URL not found.")
 
 
-# # - - - - - - - - - - - REDIRECT URL - - - - - - - - - - -
-# # redirect shortened url to target url
-# @url_shortener.get("/{url_key}")
-# @rate_limiter(limit=10, interval=timedelta(seconds=60))
-# @cached(cache)
-# async def forward_to_target_url(
-#     request: Request,
-#     url_key: str,
-#     db: dependencies.db
-# ):
-#     if short_url := dependencies.get_shortened_url_by_key(url_key, db):
-#         dependencies.update_db_clicks(short_url, db)
-#         return RedirectResponse(short_url.target_url)
-#     dependencies.raise_not_found(request)
+# - - - - - - - - - - - REDIRECT URL - - - - - - - - - - -
+# redirect shortened url to target url
+@url_shortener.get("/{url_key}")
+@rate_limiter(limit=10, interval=timedelta(seconds=60))
+@cached(cache)
+async def forward_to_target_url(
+    request: Request,
+    url_key: str
+):
+    if short_url := dependencies.get_shortened_url_by_key(url_key):
+        dependencies.update_db_clicks(short_url)
+        return RedirectResponse(short_url.target_url)
+    dependencies.raise_not_found(request)
 
 
-# # - - - - - - - - - - - ANALYTICS - - - - - - - - - - -
-# # get short url analytics
-# @url_shortener.get("/{url_key}/analytics", response_model=schemas.URL)
-# @rate_limiter(limit=10, interval=timedelta(seconds=60))
-# @cached(cache)
-# async def get_analytics(request: Request, url_key: str, db: dependencies.db):
-#     if short_url := dependencies.get_url_analysis(url_key, db):
-#         return schemas.URL(
-#             target_url=short_url.target_url,
-#             is_active=short_url.is_active,
-#             clicks=short_url.clicks
-#         )
-#     dependencies.raise_not_found(request)
+# - - - - - - - - - - - ANALYTICS - - - - - - - - - - -
+# get short url analytics
+@url_shortener.get("/{url_key}/analytics", response_model=schemas.URL)
+@rate_limiter(limit=10, interval=timedelta(seconds=60))
+@cached(cache)
+async def get_analytics(request: Request, url_key: str):
+    if short_url := dependencies.get_url_analysis(url_key):
+        return schemas.URL(
+            target_url=short_url.target_url,
+            is_active=short_url.is_active,
+            clicks=short_url.clicks
+        )
+    dependencies.raise_not_found(request)
 
 
 # - - - - - - - - - - - ADMINISTRATION - - - - - - - - - - -
@@ -148,25 +148,24 @@ async def url_info(secret_key: str, request: Request):
     dependencies.raise_not_found(request)
 
 
-# # - - - - - - - - - - - DELETE URL - - - - - - - - - - -
-# # delete shortened url
-# @url_shortener.delete("/{url_key}/delete")
-# async def delete_url(
-#     url_key: str,
-#     request: Request,
-#     db: dependencies.db
-# ):
-#     if url := dependencies.deactivate_url_by_url_key(url_key, db):
-#         message = f"Successfully deleted shortened url for {url.target_url}"
-#         return {"detail": message}
-#     dependencies.raise_not_found(request)
+# - - - - - - - - - - - DELETE URL - - - - - - - - - - -
+# delete shortened url
+@url_shortener.delete("/{url_key}/delete")
+async def delete_url(
+    url_key: str,
+    request: Request
+):
+    if url := dependencies.deactivate_url_by_url_key(url_key):
+        message = f"Successfully deleted shortened url for {url.target_url}"
+        return {"detail": message}
+    dependencies.raise_not_found(request)
 
-# @url_shortener.put("/{url_key}/recover")
-# async def recover_url(url_key: str, request: Request, db: dependencies.db):
-#     if url := dependencies.activate_url_by_url_key(url_key, db):
-#         message = f"Successfully recovered deleted url for {url.target_url}"
-#         return {"detail": message}
-#     dependencies.raise_not_found(request)
+@url_shortener.put("/{url_key}/recover")
+async def recover_url(url_key: str, request: Request):
+    if url := dependencies.activate_url_by_url_key(url_key):
+        message = f"Successfully recovered deleted url for {url.target_url}"
+        return {"detail": message}
+    dependencies.raise_not_found(request)
 
 # # danger zone
 # @url_shortener.delete("/admin/{secret_key}")

@@ -110,25 +110,46 @@ def validate_url(url):
             return True
     return False
 
-# def update_db_clicks(url: schemas.URL, db: db) -> models.URL:
-#     url.clicks += 1
-#     db.commit()
-#     db.refresh(url)
-#     return url
+def update_db_clicks(url: schemas.URL) -> models.URL:
+    # increment click
+    url.clicks += 1
 
-# def deactivate_url_by_url_key(url_key: str, db: db) -> models.URL:
-#     if url := get_shortened_url_by_key(url_key, db):
-#         url.is_active = False
-#         db.commit()
-#         db.refresh(url)
-#         return url
+    # update database
+    response = supabase.table("urls")\
+            .update({"clicks": url.clicks})\
+            .eq("key", url.key)\
+            .execute()
+    return url
 
-# def activate_url_by_url_key(url_key: str, db: db) -> models.URL:
-#     if url := db.query(models.URL).filter(models.URL.key == url_key).first():
-#         url.is_active = True
-#         db.commit()
-#         db.refresh(url)
-#         return url
+def deactivate_url_by_url_key(url_key: str) -> models.URL:
+    if url := get_shortened_url_by_key(url_key):
+        url.is_active = False
+        response = supabase.table("urls")\
+            .update({"is_active": url.is_active})\
+            .eq("key", url.key)\
+            .execute()
+        return url
+
+def activate_url_by_url_key(url_key: str) -> models.URL:
+    url: APIResponse = supabase.table("urls")\
+        .select().eq("key", url_key).eq("is_active", False).execute()
+    
+    if url.data:
+        url_data = models.URL(
+            # id=shortened_url.data[0].get("id"),
+            target_url=url.data[0].get("target_url"),
+            key=url.data[0].get("key"),
+            secret_key=url.data[0].get("secret_key"),
+            is_active=url.data[0].get("is_active"),
+            clicks=url.data[0].get("clicks")
+        )
+    
+        url_data.is_active = True
+        response = supabase.table("urls")\
+            .update({"is_active": url_data.is_active})\
+            .eq("key", url_data.key)\
+            .execute()
+        return url_data
 
 # def delete_url_by_secret_key(secret_key: str, db: db) -> models.URL:
 #     if url := db.query(models.URL).filter(models.URL.secret_key == secret_key).first():
@@ -187,6 +208,6 @@ def generate_qr_code(data: str):
     image_buffer.seek(0)
     return image_buffer
 
-# def get_url_analysis(url: str, db:db):
-#     if url := get_shortened_url_by_key(url, db):
-#         return url
+def get_url_analysis(url: str):
+    if url := get_shortened_url_by_key(url):
+        return url
