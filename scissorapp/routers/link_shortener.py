@@ -141,7 +141,7 @@ async def get_analytics(request: Request, url_key: str):
         name="administration info",
         response_model=schemas.URL_Info
     )
-@cached(cache)
+# @cached(cache)
 async def url_info(secret_key: str, request: Request):
     if url := dependencies.get_shortened_url_by_secret_key(secret_key):
         return get_admin_info(url)
@@ -167,10 +167,13 @@ async def recover_url(url_key: str, request: Request):
         return {"detail": message}
     dependencies.raise_not_found(request)
 
-# # danger zone
-# @url_shortener.delete("/admin/{secret_key}")
-# async def delete_url_by_admin(secret_key: str, request: Request, db: dependencies.db):
-#     if url := dependencies.delete_url_by_secret_key(secret_key, db):
-#         message = f"Successfully deleted shortened url for {url.target_url}"
-#         return {"detail": message}
-#     dependencies.raise_not_found(request)
+# danger zone
+@url_shortener.delete("/admin/{secret_key}")
+async def delete_url_by_admin(secret_key: str, request: Request):
+    if response := dependencies.delete_url_by_secret_key(secret_key):
+        message = f"Successfully deleted url"
+        return {
+            "detail": message,
+            "response": response
+        }
+    dependencies.raise_not_found(request)

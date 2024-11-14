@@ -40,12 +40,11 @@ def get_shortened_url_by_key(url_key: str) -> models.URL:
     return None
 
 def get_shortened_url_by_secret_key(secret_key: str) -> models.URL:
-    if shortened_url := supabase.table("urls")\
-        .select("secret_key").eq("secret_key", secret_key).execute():
-        return shortened_url
+    """
+    ...
+    """
     shortened_url: APIResponse = supabase.table("urls")\
-        .select("secret_key").eq("secret_key", secret_key).execute()
-    
+        .select().eq("secret_key", secret_key).execute()
     if shortened_url.data:
         shortened_url_data = models.URL(
             # id=shortened_url.data[0].get("id"),
@@ -55,7 +54,9 @@ def get_shortened_url_by_secret_key(secret_key: str) -> models.URL:
             is_active=shortened_url.data[0].get("is_active"),
             clicks=shortened_url.data[0].get("clicks")
         )
-        return shortened_url_data.model_dump()
+
+        return shortened_url_data
+    return None
 
 def create_random_key(length: int = 5) -> str:
     chars = string.ascii_letters + string.digits
@@ -151,12 +152,10 @@ def activate_url_by_url_key(url_key: str) -> models.URL:
             .execute()
         return url_data
 
-# def delete_url_by_secret_key(secret_key: str, db: db) -> models.URL:
-#     if url := db.query(models.URL).filter(models.URL.secret_key == secret_key).first():
-#         db.delete(url)
-#         db.commit()
-#         db.refresh(url)
-#         return url
+def delete_url_by_secret_key(secret_key: str) -> APIResponse:
+    response: APIResponse = supabase.table("urls")\
+        .delete().eq("secret_key", secret_key).execute()
+    return response
 
 def customize_short_url_address(url_key: str, new_address) -> models.URL:
     """
