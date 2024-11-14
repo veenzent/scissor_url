@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from scissorapp.routers.link_shortener import url_shortener
 
 
-app = FastAPI("Scissor URL API")
+app = FastAPI(title="Scissor URL API")
 
 origins = [
     "http://127.0.0.1:5500",
