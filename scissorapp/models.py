@@ -1,13 +1,12 @@
-from sqlalchemy import Boolean, Column, Integer, String
-from .database import Base
+from pydantic import BaseModel
 
+class URL(BaseModel):
+    # id: int
+    target_url: str
+    key: str
+    secret_key: str
+    is_active: bool
+    clicks: int
 
-class URL(Base):
-    __tablename__ = "urls"
-
-    id = Column(Integer, primary_key=True)
-    target_url = Column(String, index=True)
-    key = Column(String, unique=True, index=True)
-    secret_key = Column(String, unique=True, index=True)
-    is_active = Column(Boolean, default=True)
-    clicks = Column(Integer, default=0)
+    class Config:
+        from_attributes = True
