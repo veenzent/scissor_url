@@ -6,6 +6,13 @@ class Settings(BaseSettings):
     env_name: str = "Local Environment"
     supabase_url: str = ""
     supabase_key: str = ""
+
+    host: str =""
+    port: str =""
+    user: str =""
+    database: str =""
+    password: str =""
+
     base_url: str = "http://localhost:8000"
 
     model_config = SettingsConfigDict(env_file=".env")
@@ -14,7 +21,7 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     settings = Settings()
     print(f"Loading settings for: {settings.env_name}")
-    print(f"BASE_URL: ", settings.base_url)
+    print(f"BASE_URL: {settings.base_url}")
     return settings
 
 # print("ENV_NAME: ", get_settings().env_name)

@@ -7,6 +7,7 @@ app = FastAPI(title="Scissor URL API")
 
 origins = [
     "http://127.0.0.1:5500",
+    "http://127.0.0.1:3000",
     "https://v-scissor.netlify.app"
 ]
 

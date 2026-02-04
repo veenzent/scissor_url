@@ -89,6 +89,20 @@ async def customize_short_url_address(
 @rate_limiter(limit=10, interval=timedelta(seconds=60))
 @cached(cache)
 async def generate_qr_code(request: Request, url_key: str):
+    """
+    Generates a QR code for the shortened URL.
+
+    Given a shortened URL, this function will generate a QR code for it and return it as a response.
+
+    Args:
+        url_key (str): The key of the shortened URL to generate a QR code for. Either full address: "https://example.com/abc123" or just key: "abc123".
+
+    Returns:
+        A StreamingResponse containing the QR code as an image, with a content disposition header set to attachment and a filename of "qr_code_{url_key}.png".
+
+    Raises:
+        HTTPException: If the shortened URL is not found in the database.
+    """
     if '/' in url_key:
         url_key = url_key.split("/")[-1]
 

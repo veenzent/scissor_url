@@ -1,12 +1,13 @@
-import secrets, string
+import secrets
+import string
 from urllib.parse import urlparse
 from urllib.request import urlopen
-from typing import Annotated
+# from typing import Annotated
 from fastapi import HTTPException, Request, status, Depends
 from io import BytesIO
 import segno
-from functools import wraps
-import time
+# from functools import wraps
+# import time
 from .database import supabase
 from postgrest.base_request_builder import APIResponse
 from . import schemas, models
@@ -73,13 +74,6 @@ def create_new_url(url: str) -> models.URL:
     key = create_random_unique_key()
     secret_key = f"{key}_{create_random_key(8)}"
 
-    supabase.table("urls")\
-        .insert({
-            "target_url": url,
-            "key": key,
-            "secret_key": secret_key
-        }).execute()
-
     new_url = models.URL(
         target_url=url,
         key=key,
@@ -87,6 +81,9 @@ def create_new_url(url: str) -> models.URL:
         is_active=True,
         clicks=0
     )
+
+    supabase.table("urls")\
+        .insert(new_url.model_dump()).execute()
 
     return new_url
 
@@ -105,7 +102,7 @@ def validate_url(url):
         with urlopen(url) as response:
             if response.status == 200:
                 return True
-    except Exception as e:
+    except Exception:
         parsed_url = urlparse(url)
         if parsed_url.scheme and parsed_url.netloc and parsed_url.path:
             return True
